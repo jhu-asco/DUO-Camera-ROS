@@ -125,26 +125,10 @@ protected:
 	// Dense3D* 			_dense3d;
 	DUOResolutionInfo 	_duoResolutionInfo;
 
-	/*
-	 *	@brief Camera Parameter struct's. Taken from DUO API examples.
-	 */
-	typedef struct
-	{
-		unsigned short w, h;
-		double left[12];
-		double right[12];
-	} INTRINSICS;
+	DUO_INTR* _duoIntrinsics;
+	DUO_EXTR* _duoExtrinsics;
 
-	typedef struct
-	{
-	    double rotation[9];
-	    double translation[3];
-	} EXTRINSICS;
-
-	INTRINSICS* _duoIntrinsics;
-	EXTRINSICS* _duoExtrinsics;
-
-	bool getCameraParameters(INTRINSICS *intr, EXTRINSICS *extr);
+	bool getCameraParameters(DUO_INTR *intr, DUO_EXTR *extr);
 
 
 	/*
@@ -158,7 +142,7 @@ protected:
 	double 	_duoExposure;
 	double	_duoGain;
 	double 	_duoLEDLevel;
-	int 	_duoCameraSwap;
+	bool 	_duoCameraSwap;
 	int 	_duoHorizontalFlip;
 	int 	_duoVerticalFlip;
 

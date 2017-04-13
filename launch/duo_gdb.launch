@@ -1,5 +1,5 @@
 <launch>
-    <node pkg="duo3d_ros" name="duo_node" type="duo_node" required="true" output="screen">
+    <node pkg="duo3d_ros" name="duo_node" type="duo_node" required="true" output="screen" launch-prefix="gdb --ex r --args">
 		<!-- Supported Device Names: [Mini, Mini-lx] -->
 		<param name="device_name" 		value="Mini" />
 		<param name="device_serial_number" 	value="N-A" />
@@ -18,7 +18,7 @@
 		360 FPS @ 320x120
 
 		-->	
-		<param name="FPS"   value="35" />
+		<param name="FPS"   value="30" />
 
 		<param name="resolution_width"	value="752" />
 		<param name="resolution_height"	value="480" />
@@ -26,18 +26,15 @@
 		<param name="exposure"		value="100"  />
 		<param name="gain"		value="20"  /> 
 		<param name="led_lighting"	value="100"  />
-		<param name="HorizontalFlip"	value="true"  />
-		<param name="VerticalFlip"	value="true"  />
-		<param name="CameraSwap"	value="false"  />
 
-	    <param name="use_DUO_imu"   	value="true" />
-	    <param name="use_DUO_LEDs"   	value="true" />
-	    <param name="use_DUO_calibration"   	value="false" />
-
+    <param name="use_DUO_imu"   	value="false" />
+    <param name="use_DUO_LEDs"   	value="false" />
+    <param name="use_DUO_calibration" value="true" />
 	    <!-- NOTE: to set the calibration manually you'll need to have the "ost.txt" file from the ros calibration. then you convert (use http://wiki.ros.org/camera_calibration_parsers) it to two separate files and put it into the calibration folder -->
 
-	    <param name="camera_info_left" value="file://$(find duo3d_ros)/calibration/duo3d_left.yaml" />
-	    <param name="camera_info_right" value="file://$(find duo3d_ros)/calibration/duo3d_right.yaml" />
+
+	    <!--<param name="camera_info_left" value="file://$(find duo3d_ros)/calibration/duo3d_left.yaml" />-->
+	    <!--<param name="camera_info_right" value="file://$(find duo3d_ros)/calibration/duo3d_right.yaml" />-->
     </node>
 
 

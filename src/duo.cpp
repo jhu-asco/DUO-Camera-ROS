@@ -72,7 +72,7 @@ void DUOStereoDriver::fillDUOImages(sensor_msgs::Image& leftImage, sensor_msgs::
 }
 
 
-bool DUOStereoDriver::getCameraParameters(INTRINSICS *intr, EXTRINSICS *extr)
+bool DUOStereoDriver::getCameraParameters(DUO_INTR *intr, DUO_EXTR *extr)
 {
     if(!GetDUOIntrinsics(_duoInstance, intr))
     {
@@ -167,7 +167,7 @@ void CALLBACK DUOCallback(const PDUOFrame pFrameData, void *pUserData)
 bool DUOStereoDriver::initializeDUO()
 {
 	// Implement libCheck() later to tell user they need to update their DUO SDK
-	ROS_DEBUG("DUOLib Version: %s", GetLibVersion());
+	ROS_DEBUG("DUOLib Version: %s", GetDUOLibVersion());
 
 
 	std::string 	deviceName;
@@ -253,6 +253,7 @@ bool DUOStereoDriver::initializeDUO()
 	_priv_nh.param<bool>("use_DUO_LEDs", _useDUO_LEDs, false);
 
 	_priv_nh.param<bool>("use_DUO_calibration",  _useDUOCalibration,  true);
+	_priv_nh.param<bool>("CameraSwap",  _duoCameraSwap,  true);
 
 	_priv_nh.param<bool>("Dense3D",  _useDense3D,  false);
 
@@ -263,6 +264,8 @@ bool DUOStereoDriver::initializeDUO()
 
 	if(_useDUOCalibration)
 	{
+    ROS_ERROR_STREAM("Cannot use DUO calibration. Use external cam info.");
+    return false;    
 		if(this->getCameraParameters(_duoIntrinsics, _duoExtrinsics))
 		{
 			this->setCameraInfo();
@@ -300,7 +303,7 @@ bool DUOStereoDriver::initializeDUO()
 	 * Select 752x480 resolution with no binning capturing at 30FPS
 	 * These values (width, height, FPS) should be ROS Params
 	 */
-	if(EnumerateResolutions(&_duoResolutionInfo, 1, resWidth, resHeight, binning, framesPerSecond))
+	if(EnumerateDUOResolutions(&_duoResolutionInfo, 1, resWidth, resHeight, binning, framesPerSecond))
 	{
 		ROS_INFO("Resolution Parameters Check: PASSED");
 		
@@ -321,7 +324,7 @@ bool DUOStereoDriver::initializeDUO()
 			SetDUOExposure(_duoInstance, _duoExposure);
 			SetDUOGain(_duoInstance, _duoGain);
 			SetDUOLedPWM(_duoInstance, _duoLEDLevel);
-			SetDUOCameraSwap(_duoInstance, 1); // Switches left and right images
+			SetDUOCameraSwap(_duoInstance, _duoCameraSwap ? 1 : 0); // Switches left and right images
 
 		}
 		else
@@ -351,22 +354,23 @@ bool DUOStereoDriver::setCameraInfo(void)
 		sensor_msgs::CameraInfo 	right_camera_info;
 		//sensor_msgs::SetCameraInfo 	setCameraInfo;
 
-		left_camera_info.width 		= _duoIntrinsics->w;
-		left_camera_info.height 	= _duoIntrinsics->h;
+		left_camera_info.width 		= _duoIntrinsics->width;
+		left_camera_info.height 	= _duoIntrinsics->height;
 
-		right_camera_info.width 	= _duoIntrinsics->w;
-		right_camera_info.height 	= _duoIntrinsics->h;
+		right_camera_info.width 	= _duoIntrinsics->width;
+		right_camera_info.height 	= _duoIntrinsics->height;
 
 		for(int i = 0; i < 9; i++)
 		{
 			left_camera_info.R[i] 	= _duoExtrinsics->rotation[i];
 			right_camera_info.R[i] 	= _duoExtrinsics->rotation[i];
 		}
-		for(int i = 0; i < 12; i++)
-		{
-			left_camera_info.P[i] 		= _duoIntrinsics->left[i];
-			right_camera_info.P[i] 		= _duoIntrinsics->right[i];
-		}
+    // TODO Set this!
+		//for(int i = 0; i < 12; i++)
+		//{
+		//	left_camera_info.P[i] 		= _duoIntrinsics->left[i];
+		//	right_camera_info.P[i] 		= _duoIntrinsics->right[i];
+		//}
 
 
 		_cinfo[0]->setCameraInfo(left_camera_info);
@@ -410,7 +414,7 @@ void DUOStereoDriver::dynamicCallback(duo3d_ros::DuoConfig &config, uint32_t lev
   	if(_duoCameraSwap != config.CameraSwap)
   	{
   		_duoCameraSwap = config.CameraSwap;
-  		SetDUOCameraSwap(_duoInstance, _duoCameraSwap);
+  		SetDUOCameraSwap(_duoInstance, _duoCameraSwap ? 1 : 0);
   	}
   	if(_duoHorizontalFlip != config.HorizontalFlip)
   	{
